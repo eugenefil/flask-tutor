@@ -9,7 +9,7 @@
     <h1>Flaskr</h1>
     <ul>
     {% if g.user %}
-        <li>{{ g.user['username'] }}</li>
+        <li>{{ g.user['name'] }}</li>
         <li><a href="{{ url_for('logout') }}">Log Out</a></li>
     {% else %}
         <li><a href="{{ url_for('register') }}">Register</a></li>
