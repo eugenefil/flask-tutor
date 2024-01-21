@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>{% block title %}{% endblock %} - Flaskr</title>
+<meta charset="utf-8" />
+</head>
+<body>
+<nav>
+    <h1>Flaskr</h1>
+    <ul>
+    {% if g.user %}
+        <li>{{ g.user['username'] }}</li>
+        <li><a href="{{ url_for('logout') }}">Log Out</a></li>
+    {% else %}
+        <li><a href="{{ url_for('register') }}">Register</a></li>
+        <li><a href="{{ url_for('login') }}">Log In</a></li>
+    {% endif %}
+    </ul>
+</nav>
+<header>
+    {% block header %}{% endblock %}
+</header>
+{% for msg in get_flashed_messages() %}
+    <div>{{ msg }}</div>
+{% endfor %}
+<main>
+    {% block main %}{% endblock %}
+</main>
+</body>
+</html>
