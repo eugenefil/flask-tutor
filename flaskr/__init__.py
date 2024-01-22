@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import functools
 
 from flask import (Flask, render_template, abort, request, g, redirect,
     url_for, flash, session)
@@ -48,7 +49,6 @@ def register():
             db = get_db()
             h = generate_password_hash(f['password'])
             try:
-                db.execute('pragma foreign_keys = on') # disabled by default
                 db.execute('insert into user (name, password) values (?, ?)',
                     (f['username'], h))
                 db.commit()
@@ -91,14 +91,51 @@ def load_user():
 
 @app.route('/logout')
 def logout():
-    if g.user:
-        session.clear()
-        return redirect(url_for('login'))
+    session.clear()
+    return redirect(url_for('login'))
 
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+
+def login_required(view):
+    # functools.wraps copies original __name__ of a view to wrapper
+    # otherwise wrapper will have __name__ 'wrapper' associated with
+    # the route, so url_for(view) will fail
+    @functools.wraps(view)
+    def wrapper(*args, **kws):
+        if 'user' in g: # was user data loaded by load_user()?
+            return view(*args, **kws)
+        return redirect(url_for('login'))
+    return wrapper
+
+
+@app.route('/create', methods=('GET', 'POST'))
+@login_required
+def create():
+    if request.method == 'POST':
+        title = request.form.get('title')
+        content = request.form.get('content')
+        if not title:
+            flash('Title is required')
+        elif not content:
+            flash('Content is required')
+        else:
+            db = get_db()
+            try:
+                db.execute('pragma foreign_keys = on') # disabled by default
+                db.execute(
+                    'insert into post (author_id, title, content) values (?, ?, ?)',
+                    (g.user['id'], title, content))
+                db.commit()
+            except sqlite3.IntegrityError:
+                return redirect(url_for('logout'))
+            else:
+                return redirect(url_for('index'))
+
+    return render_template('create.html')
 
 
 os.makedirs(app.instance_path, exist_ok=True)

@@ -2,6 +2,9 @@
 
 {% block header %}
     <h1>{% block title %}Posts{% endblock %}</h1>
+    {% if g.user %}
+        <a href="{{ url_for('create') }}">New</a>
+    {% endif %}
 {% endblock %}
 
 {% block main %}
