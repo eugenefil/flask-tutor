@@ -8,4 +8,16 @@
 {% endblock %}
 
 {% block main %}
+    {% for post in posts %}
+        <article>
+            <header>
+                    <h2>{{ post['title'] }}</h2>
+                    by {{ post['user'] }} on {{ post['date'] }}
+            </header>
+            <p>{{ post['content'] }}</p>
+        </article>
+        {% if not loop.last %}
+            <hr>
+        {% endif %}
+    {% endfor %}
 {% endblock %}

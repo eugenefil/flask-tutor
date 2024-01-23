@@ -97,7 +97,14 @@ def logout():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    posts = get_db().execute('''
+        select user.name user
+            ,date(post.ctime, 'unixepoch') date
+            ,post.title
+            ,post.content
+        from post inner join user on user.id = post.author_id
+        order by post.ctime desc''').fetchall()
+    return render_template('index.html', posts=posts)
 
 
 def login_required(view):
