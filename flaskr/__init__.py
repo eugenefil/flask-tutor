@@ -92,13 +92,15 @@ def load_user():
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    return redirect(url_for('index'))
 
 
 @app.route('/')
 def index():
     posts = get_db().execute('''
         select user.name user
+            ,post.author_id
+            ,post.id
             ,date(post.ctime, 'unixepoch') date
             ,post.title
             ,post.content
@@ -143,6 +145,34 @@ def create():
                 return redirect(url_for('index'))
 
     return render_template('create.html')
+
+
+# see https://flask.palletsprojects.com/en/3.0.x/api/#url-route-registrations
+# for how to specify variable part of the url ('<int:post_id>' below)
+@app.route('/update/<int:post_id>', methods=('GET', 'POST'))
+@login_required
+def update(post_id):
+    db = get_db()
+    post = db.execute('select * from post where id = ?', (post_id,)).fetchone()
+    if post is None:
+        abort(404)
+    elif post['author_id'] != g.user['id']:
+        abort(403)
+
+    if request.method == 'POST':
+        title = request.form.get('title')
+        content = request.form.get('content')
+        if not title:
+            flash('Title is required')
+        elif not content:
+            flash('Content is required')
+        else:
+            db.execute('update post set title = ?, content = ? where id = ?',
+                (title, content, post['id']))
+            db.commit()
+            return redirect(url_for('index'))
+
+    return render_template('update.html', post=post)
 
 
 os.makedirs(app.instance_path, exist_ok=True)

@@ -13,6 +13,9 @@
             <header>
                     <h2>{{ post['title'] }}</h2>
                     by {{ post['user'] }} on {{ post['date'] }}
+                    {% if g.user and g.user['id'] == post['author_id'] %}
+                        <a href="{{ url_for('update', post_id=post['id']) }}">Edit</a>
+                    {% endif %}
             </header>
             <p>{{ post['content'] }}</p>
         </article>
