@@ -12,4 +12,8 @@
         <textarea name="content" id="content" required>{{ request.form['content'] or post['content'] }}</textarea>
         <input type="submit" value="Save" />
     </form>
+    <hr>
+    <form method="post" action="{{ url_for('delete', post_id=post['id']) }}" >
+        <input type="submit" value="Delete" />
+    </form>
 {% endblock %}

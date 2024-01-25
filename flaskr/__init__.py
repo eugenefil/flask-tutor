@@ -147,18 +147,22 @@ def create():
     return render_template('create.html')
 
 
-# see https://flask.palletsprojects.com/en/3.0.x/api/#url-route-registrations
-# for how to specify variable part of the url ('<int:post_id>' below)
-@app.route('/update/<int:post_id>', methods=('GET', 'POST'))
-@login_required
-def update(post_id):
+def get_post(post_id):
     db = get_db()
     post = db.execute('select * from post where id = ?', (post_id,)).fetchone()
     if post is None:
         abort(404)
     elif post['author_id'] != g.user['id']:
         abort(403)
+    return post
 
+
+# see https://flask.palletsprojects.com/en/3.0.x/api/#url-route-registrations
+# for how to specify variable part of the url ('<int:post_id>' below)
+@app.route('/update/<int:post_id>', methods=('GET', 'POST'))
+@login_required
+def update(post_id):
+    post = get_post(post_id)
     if request.method == 'POST':
         title = request.form.get('title')
         content = request.form.get('content')
@@ -167,12 +171,23 @@ def update(post_id):
         elif not content:
             flash('Content is required')
         else:
+            db = get_db()
             db.execute('update post set title = ?, content = ? where id = ?',
                 (title, content, post['id']))
             db.commit()
             return redirect(url_for('index'))
 
     return render_template('update.html', post=post)
+
+
+@app.route('/delete/<int:post_id>', methods=('POST',))
+@login_required
+def delete(post_id):
+    get_post(post_id)
+    db = get_db()
+    db.execute('delete from post where id = ?', (post_id,))
+    db.commit()
+    return redirect(url_for('index'))
 
 
 os.makedirs(app.instance_path, exist_ok=True)
